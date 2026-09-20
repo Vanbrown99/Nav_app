@@ -1,0 +1,126 @@
+name: Delivery
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delivery-production
+  cancel-in-progress: false
+
+jobs:
+  pages:
+    name: Deploy web to GitHub Pages
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out validated revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Configure optional Google web keys
+        env:
+          GOOGLE_MAPS_WEB_API_KEY: ${{ vars.GOOGLE_MAPS_WEB_API_KEY }}
+        shell: python
+        run: |
+          from pathlib import Path
+          import os
+
+          path = Path('web/index.html')
+          content = path.read_text(encoding='utf-8')
+          content = content.replace(
+              'name="google-maps-api-key" content=""',
+              f'name="google-maps-api-key" content="{os.getenv("GOOGLE_MAPS_WEB_API_KEY", "")}"',
+          )
+          path.write_text(content, encoding='utf-8')
+
+      - name: Build production web app
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+          GOOGLE_MAPS_ENABLED: ${{ vars.GOOGLE_MAPS_ENABLED }}
+        run: >-
+          flutter build web --release
+          --base-href /Nav_app/
+          --dart-define=API_BASE_URL=${API_BASE_URL}
+          --dart-define=GOOGLE_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID}
+          --dart-define=GOOGLE_MAPS_CONFIGURED=${GOOGLE_MAPS_ENABLED:-false}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  backend-image:
+    name: Publish FastAPI container
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out validated revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Sign in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/nav-app-api
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-
+
+      - name: Build and publish API image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

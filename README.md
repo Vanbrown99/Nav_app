@@ -62,6 +62,24 @@ Applied OOP principles and patterns:
 - **Observer pattern:** Flutter `ChangeNotifier` updates subscribed views when domain state changes.
 - **Dependency injection:** the repository is supplied to the controller and the controller to the application root.
 
+See [docs/architecture.md](docs/architecture.md) for component boundaries, security decisions, diagrams, and pattern rationale.
+
+## CI/CD
+
+GitHub Actions provides two pipelines:
+
+- **CI:** formatting, Flutter analysis, Flutter tests, FastAPI tests, web build, and debug APK build on every push and pull request to `main`.
+- **Delivery:** after successful CI on `main`, deploys Flutter web to GitHub Pages and publishes the FastAPI container to `ghcr.io/vanbrown99/nav-app-api` with `latest` and commit-SHA tags.
+
+Configure these GitHub repository variables before production delivery:
+
+- `API_BASE_URL`: deployed FastAPI URL
+- `GOOGLE_WEB_CLIENT_ID`: Google Web OAuth client ID
+- `GOOGLE_MAPS_WEB_API_KEY`: browser-restricted Maps key
+- `GOOGLE_MAPS_ENABLED`: `true` after the Maps key is configured
+
+In repository **Settings → Pages**, select **GitHub Actions** as the source. The backend image still needs a runtime host such as Cloud Run, Fly.io, Render, or a container server; GHCR is the deployable artifact registry, not the running service.
+
 ## Visual system
 
 The palette is based on Cameroon’s forests, coastal landscapes and warm natural materials:
