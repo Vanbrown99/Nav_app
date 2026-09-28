@@ -8,11 +8,24 @@ abstract interface class PlaceRepository {
 
 class DemoPlaceRepository implements PlaceRepository {
   @override
-  Future<List<Place>> getPlaces() async => [
-    ..._places,
-    ...createRegionalPlaces(),
-    ...createYaoundePlaces(),
-  ];
+  Future<List<Place>> getPlaces() async {
+    final places = [
+      ..._places,
+      ...createRegionalPlaces(),
+      ...createYaoundePlaces(),
+    ];
+    final regionCounts = <String, int>{};
+
+    return places.where((place) {
+      final limit = place.region == 'Centre' || place.region == 'Littoral'
+          ? 10
+          : 5;
+      final count = regionCounts[place.region] ?? 0;
+      if (count >= limit) return false;
+      regionCounts[place.region] = count + 1;
+      return true;
+    }).toList();
+  }
 
   static const _places = <Place>[
     Place(

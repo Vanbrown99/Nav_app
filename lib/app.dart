@@ -5,7 +5,6 @@ import 'package:nyetam/presentation/auth_page.dart';
 import 'package:nyetam/presentation/culture_controller.dart';
 import 'package:nyetam/presentation/events_controller.dart';
 import 'package:nyetam/presentation/explore_controller.dart';
-import 'package:nyetam/presentation/guides_controller.dart';
 import 'package:nyetam/presentation/home_shell.dart';
 import 'package:nyetam/presentation/reviews_controller.dart';
 import 'package:nyetam/presentation/reviews_scope.dart';
@@ -30,7 +29,6 @@ class NyetamApp extends StatelessWidget {
     required this.controller,
     required this.cultureController,
     required this.eventsController,
-    required this.guidesController,
     required this.reviewsController,
     this.locationService = const DeviceLocationService(),
   });
@@ -39,7 +37,6 @@ class NyetamApp extends StatelessWidget {
   final ExploreController controller;
   final CultureController cultureController;
   final EventsController eventsController;
-  final GuidesController guidesController;
   final ReviewsController reviewsController;
   final LocationService locationService;
 
@@ -108,7 +105,6 @@ class NyetamApp extends StatelessWidget {
         controller: controller,
         cultureController: cultureController,
         eventsController: eventsController,
-        guidesController: guidesController,
         reviewsController: reviewsController,
         locationService: locationService,
       ),
@@ -122,7 +118,6 @@ class _LaunchFlow extends StatefulWidget {
     required this.controller,
     required this.cultureController,
     required this.eventsController,
-    required this.guidesController,
     required this.reviewsController,
     required this.locationService,
   });
@@ -131,7 +126,6 @@ class _LaunchFlow extends StatefulWidget {
   final ExploreController controller;
   final CultureController cultureController;
   final EventsController eventsController;
-  final GuidesController guidesController;
   final ReviewsController reviewsController;
   final LocationService locationService;
 
@@ -151,7 +145,6 @@ class _LaunchFlowState extends State<_LaunchFlow> {
           controller: widget.controller,
           cultureController: widget.cultureController,
           eventsController: widget.eventsController,
-          guidesController: widget.guidesController,
         ),
       );
     }

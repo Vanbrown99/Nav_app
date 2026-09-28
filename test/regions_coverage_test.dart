@@ -7,12 +7,23 @@ void main() {
     final places = await DemoPlaceRepository().getPlaces();
 
     for (final region in cameroonRegions) {
+      final count = places.where((place) => place.region == region.name).length;
+      final limit = region.name == 'Centre' || region.name == 'Littoral'
+          ? 10
+          : 5;
+
       expect(
-        places.where((place) => place.region == region.name),
-        isNotEmpty,
-        reason: '${region.name} should have at least one destination',
+        count,
+        greaterThan(0),
+        reason: '${region.name} should have destinations',
+      );
+      expect(
+        count,
+        lessThanOrEqualTo(limit),
+        reason: '${region.name} exceeds its destination limit',
       );
     }
+    expect(places.where((place) => place.region == 'Centre').length, 10);
     expect(cameroonRegions.length, 10);
   });
 }

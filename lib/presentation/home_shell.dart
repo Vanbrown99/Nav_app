@@ -9,13 +9,15 @@ import 'package:nyetam/presentation/cameroon_map.dart';
 import 'package:nyetam/presentation/events_controller.dart';
 import 'package:nyetam/presentation/events_page.dart';
 import 'package:nyetam/presentation/explore_controller.dart';
-import 'package:nyetam/presentation/guides_controller.dart';
-import 'package:nyetam/presentation/guides_page.dart';
 import 'package:nyetam/presentation/google_map_canvas.dart';
 import 'package:nyetam/presentation/region_explorer_page.dart';
 import 'package:nyetam/presentation/reviews_controller.dart';
 import 'package:nyetam/presentation/reviews_scope.dart';
 import 'package:nyetam/presentation/reviews_section.dart';
+import 'package:nyetam/presentation/real_map_canvas.dart';
+import 'package:nyetam/services/directions_launcher.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' as tile_map;
 
 class HomeShell extends StatefulWidget {
   const HomeShell({
@@ -23,13 +25,11 @@ class HomeShell extends StatefulWidget {
     required this.controller,
     required this.cultureController,
     required this.eventsController,
-    required this.guidesController,
   });
 
   final ExploreController controller;
   final CultureController cultureController;
   final EventsController eventsController;
-  final GuidesController guidesController;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -44,7 +44,6 @@ class _HomeShellState extends State<HomeShell> {
     widget.controller.load();
     widget.cultureController.load();
     widget.eventsController.load();
-    widget.guidesController.load();
   }
 
   @override
@@ -54,7 +53,6 @@ class _HomeShellState extends State<HomeShell> {
         controller: widget.controller,
         cultureController: widget.cultureController,
         eventsController: widget.eventsController,
-        guidesController: widget.guidesController,
       ),
       MapView(controller: widget.controller),
       TripView(
@@ -105,12 +103,10 @@ class DiscoverView extends StatelessWidget {
     required this.controller,
     required this.cultureController,
     required this.eventsController,
-    required this.guidesController,
   });
   final ExploreController controller;
   final CultureController cultureController;
   final EventsController eventsController;
-  final GuidesController guidesController;
 
   @override
   Widget build(BuildContext context) {
@@ -162,9 +158,6 @@ class DiscoverView extends StatelessWidget {
             ),
           SliverToBoxAdapter(
             child: UpcomingEventsRail(controller: eventsController),
-          ),
-          SliverToBoxAdapter(
-            child: GuidesFeature(controller: guidesController),
           ),
           SliverToBoxAdapter(child: _RegionRail(controller: controller)),
           SliverToBoxAdapter(
@@ -663,15 +656,14 @@ class MapView extends StatefulWidget {
 }
 
 class _MapViewState extends State<MapView> {
-  final TransformationController _transformationController =
-      TransformationController();
+  final MapController _mapController = MapController();
   GoogleMapController? _googleMapController;
   Place? selectedPlace;
+  Place? _directionDestination;
   _TravelMode _travelMode = _TravelMode.drive;
 
   @override
   void dispose() {
-    _transformationController.dispose();
     super.dispose();
   }
 
@@ -680,6 +672,61 @@ class _MapViewState extends State<MapView> {
     final speed = _travelMode == _TravelMode.drive ? 35.0 : 4.5;
     final estimate = (distance / speed * 60).round();
     return estimate < 1 ? 1 : estimate;
+  }
+
+  Future<void> _launchDirections(Place place) async {
+    setState(() => _directionDestination = place);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Showing directions to ${place.name}...')),
+    );
+
+    try {
+      if (googleMapsConfigured && googleMapsSupportedPlatform) {
+        await _googleMapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(place.coordinates.latitude, place.coordinates.longitude),
+            14,
+          ),
+        );
+      } else {
+        _mapController.move(
+          tile_map.LatLng(
+            place.coordinates.latitude,
+            place.coordinates.longitude,
+          ),
+          13,
+        );
+      }
+    } catch (_) {
+      // Continue to external directions if the map controller is not ready.
+    }
+
+    try {
+      final launched = await launchGoogleMapsDirections(
+        place,
+        origin: widget.controller.currentLocation,
+        walking: _travelMode == _TravelMode.walk,
+      );
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Route preview shown. Could not open Google Maps.'),
+          ),
+        );
+      } else if (launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Opening directions in Google Maps.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Route preview shown. Could not open Google Maps.'),
+          ),
+        );
+      }
+    }
   }
 
   void _showLegend() {
@@ -728,66 +775,26 @@ class _MapViewState extends State<MapView> {
                       currentLocation: widget.controller.currentLocation,
                       itinerary: widget.controller.tripPlaces,
                       routePoints: widget.controller.routePoints,
+                      directionDestination: _directionDestination,
                       onControllerReady: (controller) =>
                           _googleMapController = controller,
-                      onPlaceSelected: (place) =>
-                          setState(() => selectedPlace = place),
+                      onPlaceSelected: (place) => setState(() {
+                        selectedPlace = place;
+                        _directionDestination = null;
+                      }),
                     )
-                  : Stack(
-                      children: [
-                        Positioned.fill(
-                          child: InteractiveViewer(
-                            transformationController: _transformationController,
-                            constrained: false,
-                            boundaryMargin: const EdgeInsets.all(120),
-                            minScale: 1,
-                            maxScale: 4,
-                            child: SizedBox(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              child: CameroonMapCanvas(
-                                places: widget.controller.visiblePlaces,
-                                selectedPlace: selectedPlace,
-                                currentLocation:
-                                    widget.controller.currentLocation,
-                                itinerary: widget.controller.tripPlaces,
-                                directionDestination: selectedPlace,
-                                onPlaceSelected: (place) =>
-                                    setState(() => selectedPlace = place),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 16,
-                          right: 16,
-                          bottom: selectedPlace == null ? 20 : 174,
-                          child: IgnorePointer(
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: .92),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  googleMapsSupportedPlatform
-                                      ? 'Google Maps key required'
-                                      : 'Google Maps is available on Android, iOS and web',
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                  : RealMapCanvas(
+                      mapController: _mapController,
+                      places: widget.controller.visiblePlaces,
+                      selectedPlace: selectedPlace,
+                      currentLocation: widget.controller.currentLocation,
+                      itinerary: widget.controller.tripPlaces,
+                      routePoints: widget.controller.routePoints,
+                      directionDestination: _directionDestination,
+                      onPlaceSelected: (place) => setState(() {
+                        selectedPlace = place;
+                        _directionDestination = null;
+                      }),
                     ),
             ),
             Positioned(
@@ -889,8 +896,13 @@ class _MapViewState extends State<MapView> {
                         13,
                       ),
                     );
+                  } else if (location != null) {
+                    _mapController.move(
+                      tile_map.LatLng(location.latitude, location.longitude),
+                      13,
+                    );
                   } else {
-                    _transformationController.value = Matrix4.identity();
+                    _mapController.move(const tile_map.LatLng(5.2, 11.7), 5.4);
                   }
                   setState(() => selectedPlace = null);
                 },
@@ -909,8 +921,7 @@ class _MapViewState extends State<MapView> {
                   travelMode: _travelMode,
                   onTravelModeChanged: (mode) =>
                       setState(() => _travelMode = mode),
-                  onDirections: () =>
-                      _openPlace(context, selectedPlace!, widget.controller),
+                  onDirections: () => _launchDirections(selectedPlace!),
                 ),
               ),
           ],

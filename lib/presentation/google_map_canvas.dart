@@ -24,6 +24,7 @@ class GoogleTourismMap extends StatefulWidget {
     required this.routePoints,
     required this.currentLocation,
     required this.selectedPlace,
+    required this.directionDestination,
     required this.onPlaceSelected,
     required this.onControllerReady,
   });
@@ -33,6 +34,7 @@ class GoogleTourismMap extends StatefulWidget {
   final List<GeoPoint> routePoints;
   final GeoPoint? currentLocation;
   final Place? selectedPlace;
+  final Place? directionDestination;
   final ValueChanged<Place> onPlaceSelected;
   final ValueChanged<GoogleMapController> onControllerReady;
 
@@ -70,6 +72,13 @@ class _GoogleTourismMapState extends State<GoogleTourismMap> {
                 : widget.itinerary.map((place) => place.coordinates))
             .map(_latLng)
             .toList(growable: false);
+    final directionPoints =
+        widget.currentLocation == null || widget.directionDestination == null
+        ? const <LatLng>[]
+        : [
+            _latLng(widget.currentLocation!),
+            _latLng(widget.directionDestination!.coordinates),
+          ];
     final markers = <Marker>{
       for (final place in widget.places.take(80))
         Marker(
@@ -107,17 +116,24 @@ class _GoogleTourismMapState extends State<GoogleTourismMap> {
         zoom: widget.currentLocation == null ? 5.8 : 12,
       ),
       markers: markers,
-      polylines: routePoints.length < 2
-          ? const {}
-          : {
-              Polyline(
-                polylineId: const PolylineId('itinerary'),
-                points: routePoints,
-                color: AppColors.clay,
-                width: 5,
-                geodesic: true,
-              ),
-            },
+      polylines: {
+        if (routePoints.length > 1)
+          Polyline(
+            polylineId: const PolylineId('itinerary'),
+            points: routePoints,
+            color: AppColors.clay,
+            width: 5,
+            geodesic: true,
+          ),
+        if (directionPoints.length > 1)
+          Polyline(
+            polylineId: const PolylineId('directions-preview'),
+            points: directionPoints,
+            color: AppColors.gold,
+            width: 5,
+            geodesic: true,
+          ),
+      },
       myLocationEnabled: widget.currentLocation != null,
       myLocationButtonEnabled: false,
       compassEnabled: true,

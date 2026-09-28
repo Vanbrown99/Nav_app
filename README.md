@@ -23,8 +23,6 @@ Nyetam is a Flutter tourism and exploration application designed around three qu
 - Five-star review composer with validation and live rating updates
 - Cultural guide covering cuisine, customs, languages, history and arts
 - Topic and regional guide filters with detailed reading pages
-- Verified local tour-guide directory with language and regional filters
-- Guide profiles, service pricing and validated traveler inquiry requests
 - Favorites and personal itinerary state
 - Numbered itinerary trace with per-leg and total distance estimates
 - Emergency coordinates and location sharing surface

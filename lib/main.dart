@@ -4,13 +4,11 @@ import 'package:nyetam/app.dart';
 import 'package:nyetam/presentation/auth_controller.dart';
 import 'package:nyetam/data/demo_culture_repository.dart';
 import 'package:nyetam/data/demo_event_repository.dart';
-import 'package:nyetam/data/demo_guide_repository.dart';
 import 'package:nyetam/data/demo_place_repository.dart';
 import 'package:nyetam/data/demo_review_repository.dart';
 import 'package:nyetam/presentation/culture_controller.dart';
 import 'package:nyetam/presentation/events_controller.dart';
 import 'package:nyetam/presentation/explore_controller.dart';
-import 'package:nyetam/presentation/guides_controller.dart';
 import 'package:nyetam/presentation/reviews_controller.dart';
 import 'package:nyetam/services/auth_service.dart';
 import 'package:nyetam/services/google_identity_service.dart';
@@ -34,7 +32,6 @@ void main() {
       ),
       cultureController: CultureController(repository: DemoCultureRepository()),
       eventsController: EventsController(repository: DemoEventRepository()),
-      guidesController: GuidesController(repository: DemoGuideRepository()),
       reviewsController: ReviewsController(repository: DemoReviewRepository()),
     ),
   );
