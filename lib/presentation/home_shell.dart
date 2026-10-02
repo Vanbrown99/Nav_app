@@ -11,6 +11,7 @@ import 'package:nyetam/presentation/events_page.dart';
 import 'package:nyetam/presentation/explore_controller.dart';
 import 'package:nyetam/presentation/google_map_canvas.dart';
 import 'package:nyetam/presentation/region_explorer_page.dart';
+import 'package:nyetam/presentation/place_image.dart';
 import 'package:nyetam/presentation/reviews_controller.dart';
 import 'package:nyetam/presentation/reviews_scope.dart';
 import 'package:nyetam/presentation/reviews_section.dart';
@@ -368,7 +369,7 @@ class PlaceCard extends StatelessWidget {
                 children: [
                   Hero(
                     tag: place.id,
-                    child: _PlaceImage(place: place, height: 152),
+                    child: PlaceImage(place: place, height: 152),
                   ),
                   Positioned(
                     top: 8,
@@ -448,25 +449,6 @@ class PlaceCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _PlaceImage extends StatelessWidget {
-  const _PlaceImage({required this.place, required this.height});
-  final Place place;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) => Image.network(
-    place.imageUrl,
-    height: height,
-    width: double.infinity,
-    fit: BoxFit.cover,
-    errorBuilder: (_, _, _) => Container(
-      height: height,
-      color: AppColors.moss,
-      child: const Icon(Icons.landscape, size: 44, color: AppColors.forest),
-    ),
-  );
 }
 
 class _SectionHeading extends StatelessWidget {
@@ -985,7 +967,7 @@ class _MapPlacePreview extends StatelessWidget {
                 child: SizedBox(
                   width: 68,
                   height: 68,
-                  child: _PlaceImage(place: place, height: 68),
+                  child: PlaceImage(place: place, height: 68),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1391,7 +1373,7 @@ class SavedView extends StatelessWidget {
                   child: SizedBox(
                     width: 62,
                     height: 62,
-                    child: _PlaceImage(place: place, height: 62),
+                    child: PlaceImage(place: place, height: 62),
                   ),
                 ),
                 title: Text(
@@ -1557,7 +1539,7 @@ class PlaceDetailPage extends StatelessWidget {
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: place.id,
-                child: _PlaceImage(place: place, height: 310),
+                child: PlaceImage(place: place, height: 310),
               ),
             ),
           ),

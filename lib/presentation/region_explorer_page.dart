@@ -3,6 +3,7 @@ import 'package:nyetam/app.dart';
 import 'package:nyetam/domain/cameroon_region.dart';
 import 'package:nyetam/domain/place.dart';
 import 'package:nyetam/presentation/explore_controller.dart';
+import 'package:nyetam/presentation/place_image.dart';
 
 class RegionExplorerPage extends StatelessWidget {
   const RegionExplorerPage({
@@ -232,17 +233,7 @@ class _RegionalPlaceTile extends StatelessWidget {
           height: 108,
           child: Row(
             children: [
-              Image.network(
-                place.imageUrl,
-                width: 108,
-                height: 108,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  width: 108,
-                  color: AppColors.moss,
-                  child: Icon(place.category.icon, color: AppColors.forest),
-                ),
-              ),
+              PlaceImage(place: place, width: 108, height: 108),
               const SizedBox(width: 13),
               Expanded(
                 child: Padding(
