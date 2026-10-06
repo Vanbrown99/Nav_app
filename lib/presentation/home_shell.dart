@@ -191,7 +191,12 @@ class _DiscoverHeader extends StatelessWidget {
                   color: AppColors.forest,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.terrain, color: Colors.white),
+                child: ClipOval(
+                  child: Image.asset(
+                    'images/mboa_nav_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(width: 10),
               const Expanded(
@@ -199,7 +204,7 @@ class _DiscoverHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'NYETAM',
+                      'MBOA NAV',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.6,
@@ -1512,6 +1517,31 @@ class PlaceDetailPage extends StatelessWidget {
   final ExploreController controller;
   final ReviewsController reviewsController;
 
+  Future<void> _openDirections(BuildContext context) async {
+    try {
+      final launched = await launchGoogleMapsDirections(
+        place,
+        origin: controller.currentLocation,
+        walking: false,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            launched
+                ? 'Opening directions in Google Maps.'
+                : 'Could not open Google Maps.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Google Maps.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([controller, reviewsController]),
@@ -1714,7 +1744,7 @@ class PlaceDetailPage extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _openDirections(context),
                   icon: const Icon(Icons.directions),
                   label: const Text('Directions'),
                 ),

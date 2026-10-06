@@ -67,7 +67,7 @@ class NyetamApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Nyetam Cameroon',
+      title: 'Mboa Nav',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

@@ -19,7 +19,7 @@ void main() {
     await tester.tap(find.text('Estelle Manka'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Identity and professional information verified by Nyetam.'),
+      find.text('Identity and professional information verified by Mboa Nav.'),
       findsOneWidget,
     );
 

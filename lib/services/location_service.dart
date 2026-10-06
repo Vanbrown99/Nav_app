@@ -14,6 +14,10 @@ class LocationResult {
 
 abstract interface class LocationService {
   Future<LocationResult> determinePosition();
+
+  Future<bool> openLocationSettings();
+
+  Future<bool> openAppSettings();
 }
 
 abstract interface class DistanceCalculator {
@@ -43,6 +47,12 @@ class HaversineDistanceCalculator implements DistanceCalculator {
 
 class DeviceLocationService implements LocationService {
   const DeviceLocationService();
+
+  @override
+  Future<bool> openLocationSettings() => Geolocator.openLocationSettings();
+
+  @override
+  Future<bool> openAppSettings() => Geolocator.openAppSettings();
 
   @override
   Future<LocationResult> determinePosition() async {

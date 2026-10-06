@@ -124,7 +124,26 @@ API documentation is available at `http://127.0.0.1:8000/docs`.
 flutter run -d chrome --web-port 8123 --dart-define=GOOGLE_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
 ```
 
-For Android, create an Android OAuth client for package `cm.nyetam.nyetam` and the app signing SHA-1, then pass the Web client ID as `GOOGLE_SERVER_CLIENT_ID`.
+For Android, create an Android OAuth client in the same Google Cloud project. Use package `cm.nyetam.nyetam` and the SHA-1 fingerprint for the signing key you use. To find the debug fingerprint, run this from PowerShell in `android`:
+
+```powershell
+.\gradlew signingReport
+```
+
+Set the Web client ID as `GOOGLE_CLIENT_ID` in `backend/.env`; this must match the ID-token audience. On an Android phone, start the backend so it accepts LAN connections:
+
+```powershell
+Set-Location backend
+..\.venv\Scripts\python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Then run the app with the Web client ID and your computer's LAN IP (the phone and computer must be on the same network):
+
+```powershell
+flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=your-web-client-id.apps.googleusercontent.com --dart-define=API_BASE_URL=http://192.168.1.20:8000
+```
+
+Replace `192.168.1.20` with your computer's LAN IP. `10.0.2.2` is only for the Android emulator. For a deployed backend, use its HTTPS URL instead.
 
 For iOS, create an iOS OAuth client for the app bundle identifier, configure its reversed client ID URL scheme in `ios/Runner/Info.plist`, and pass both the iOS client ID and Web server client ID:
 

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "cm.nyetam" "\0"
-            VALUE "FileDescription", "nyetam" "\0"
+            VALUE "FileDescription", "Mboa Nav" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "nyetam" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 cm.nyetam. All rights reserved." "\0"
             VALUE "OriginalFilename", "nyetam.exe" "\0"
-            VALUE "ProductName", "nyetam" "\0"
+            VALUE "ProductName", "Mboa Nav" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

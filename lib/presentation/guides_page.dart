@@ -465,7 +465,7 @@ class GuideDetailPage extends StatelessWidget {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Identity and professional information verified by Nyetam.',
+                      'Identity and professional information verified by Mboa Nav.',
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
